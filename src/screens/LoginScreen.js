@@ -1,21 +1,38 @@
 import React from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableHighlight } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableHighlight, AsyncStorage } from 'react-native';
 import { NavigationActions } from 'react-navigation';
+import Storage from 'react-native-storage';
 
 class LoginScreen extends React.Component {
   state = {
-    email: '',
+    name: '',
     password: '',
   }
 
   Submit() {
+    const storage = new Storage({
+      size: 1000,
+      storageBackend: AsyncStorage,
+      defaultExpires: null,
+      enableCache: true,
+      sync : {
+      },
+    });
     const resetAction = NavigationActions.reset({
       index: 0,
       actions: [
         NavigationActions.navigate({ routeName: 'ChatRoom' }),
       ],
     });
-    this.props.navigation.dispatch(resetAction);
+    storage.getAllDataForKey(this.state.name)
+      .then((users) => {
+        console.log(users);
+        if (users[0].name !== '' && users[0].password === this.state.password) {
+          this.props.navigation.dispatch(resetAction);
+        } else {
+          console.log('ユーザーIDもしくはパスワードが違います。');
+        }
+      });
   }
 
   render() {
@@ -23,8 +40,8 @@ class LoginScreen extends React.Component {
       <View style={styles.container}>
         <TextInput
           style={styles.input}
-          value={this.state.email}
-          onChangeText={(text) => { this.setState({ email: text }); }}
+          value={this.state.name}
+          onChangeText={(text) => { this.setState({ name: text }); }}
           autoCapitalize="none"
           autoCorrect={false}
           placeholder="ユーザーID"
